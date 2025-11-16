@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -12,8 +13,12 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true // Enable cookies and authentication headers
+}));
 app.use(compression());
+app.use(cookieParser()); // Parse cookies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -37,21 +42,33 @@ app.get('/api', (req, res) => {
       students: '/api/student',
       volunteers: '/api/volunteer',
       stalls: '/api/stall',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      feedback: '/api/feedback',
+      ranking: '/api/ranking',
+      checkInOut: '/api/check-in-out'
     }
   });
 });
 
-// Import routes when they are created
-// import studentRoutes from './routes/student/index.js';
-// import volunteerRoutes from './routes/volunteer/index.js';
-// import stallRoutes from './routes/stall/index.js';
-// import adminRoutes from './routes/admin/index.js';
+// Import routes
+import {
+  adminRoutes,
+  studentRoutes,
+  volunteerRoutes,
+  stallRoutes,
+  feedbackRoutes,
+  rankingRoutes,
+  checkInOutRoutes
+} from './routes/index.js';
 
-// app.use('/api/student', studentRoutes);
-// app.use('/api/volunteer', volunteerRoutes);
-// app.use('/api/stall', stallRoutes);
-// app.use('/api/admin', adminRoutes);
+// Use routes
+app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/volunteer', volunteerRoutes);
+app.use('/api/stall', stallRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/ranking', rankingRoutes);
+app.use('/api/check-in-out', checkInOutRoutes);
 
 // 404 handler
 app.use((req, res) => {

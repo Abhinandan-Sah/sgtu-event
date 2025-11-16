@@ -1,6 +1,22 @@
-// Student Seeder - Seeds demo students with proper structure
+/**
+ * Student Seeder - Production-Ready
+ * 
+ * @description Seeds students with auto-generated QR tokens
+ * @usage npm run seed
+ * @category Seeder
+ * @author SGTU Event Team
+ * @version 2.0.0 (Production-Ready)
+ * 
+ * Features:
+ * - Auto-generates JWT QR tokens during insert
+ * - Production-ready token format (157 chars)
+ * - No manual regeneration needed
+ * - Ready for Excel import pattern
+ */
+
 import { query } from '../config/db.js';
 import bcrypt from 'bcryptjs';
+import QRCodeService from '../services/qrCode.js';
 
 const students = [
   {
@@ -86,12 +102,17 @@ export async function seedStudents(schools) {
     const school_id = schools[schoolIndex].id;
 
     try {
+      // Generate production-ready QR token (JWT format, 157 chars)
+      const qrToken = QRCodeService.generateStudentQRToken({
+        registration_no: student.registration_no
+      });
+      
       const insertQuery = `
         INSERT INTO students (
           registration_no, email, password_hash, full_name, 
-          school_id, phone
+          school_id, phone, qr_code_token
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (registration_no) DO NOTHING
         RETURNING id, email, registration_no
       `;
@@ -102,7 +123,8 @@ export async function seedStudents(schools) {
         hashedPassword,
         student.full_name,
         school_id,
-        student.phone
+        student.phone,
+        qrToken
       ]);
       
       if (result.length > 0) {

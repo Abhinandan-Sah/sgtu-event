@@ -50,6 +50,29 @@ class CheckInOutModel {
     return results.map(row => new CheckInOutModel(row));
   }
 
+  // Alias method for consistency with controller naming
+  static async findByStudentId(studentId, sql) {
+    return await CheckInOutModel.findByStudent(studentId, sql);
+  }
+
+  // Get all check-in/out records by volunteer ID
+  static async findByVolunteerId(volunteerId, sql) {
+    const query = `
+      SELECT 
+        c.*,
+        s.full_name as student_name,
+        s.registration_no,
+        v.full_name as volunteer_name
+      FROM check_in_outs c
+      LEFT JOIN students s ON c.student_id = s.id
+      LEFT JOIN volunteers v ON c.volunteer_id = v.id
+      WHERE c.volunteer_id = $1
+      ORDER BY c.scanned_at DESC
+    `;
+    const results = await sql(query, [volunteerId]);
+    return results.map(row => new CheckInOutModel(row));
+  }
+
   // Get last check-in record (to calculate duration on checkout)
   static async getLastCheckIn(studentId, sql) {
     const query = `

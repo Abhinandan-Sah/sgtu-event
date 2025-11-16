@@ -12,11 +12,15 @@ server/
 │   │   ├── redis.js            # Redis Cloud connection
 │   │   └── test-db.js          # Test database config
 │   │
-│   ├── 📁 controllers/         # HTTP Request Handlers
-│   │   ├── admin/              # Admin operations
-│   │   ├── stall/              # Stall operations
-│   │   ├── student/            # Student operations
-│   │   └── volunteer/          # Volunteer operations
+│   ├── 📁 controllers/         # HTTP Request Handlers (FLAT STRUCTURE)
+│   │   ├── admin.controller.js       # Admin operations
+│   │   ├── student.controller.js     # Student operations
+│   │   ├── volunteer.controller.js   # Volunteer operations
+│   │   ├── stall.controller.js       # Stall operations
+│   │   ├── feedback.controller.js    # Feedback operations
+│   │   ├── ranking.controller.js     # Ranking operations
+│   │   ├── checkInOut.controller.js  # Check-in/out operations
+│   │   └── index.js                  # Central exports
 │   │
 │   ├── 📁 helpers/             # Shared Helper Functions
 │   │   └── response.js         # Standardized API responses
@@ -32,17 +36,26 @@ server/
 │   │   ├── rollback-database.js
 │   │   └── README.md
 │   │
-│   ├── 📁 models/              # Data Models
-│   │   ├── Student.model.js
-│   │   ├── Stall.model.js
+│   ├── 📁 models/              # Data Models (FLAT STRUCTURE)
 │   │   ├── Admin.model.js
+│   │   ├── Student.model.js
+│   │   ├── Volunteer.model.js
+│   │   ├── Stall.model.js
+│   │   ├── Feedback.model.js
+│   │   ├── Ranking.model.js
+│   │   ├── CheckInOut.model.js
+│   │   ├── School.model.js
 │   │   └── index.js
 │   │
-│   ├── 📁 routes/              # API Route Definitions
-│   │   ├── admin/
-│   │   ├── stall/
-│   │   ├── student/
-│   │   └── volunteer/
+│   ├── 📁 routes/              # API Route Definitions (FLAT STRUCTURE)
+│   │   ├── admin.route.js            # Admin routes
+│   │   ├── student.route.js          # Student routes
+│   │   ├── volunteer.route.js        # Volunteer routes
+│   │   ├── stall.route.js            # Stall routes
+│   │   ├── feedback.route.js         # Feedback routes
+│   │   ├── ranking.route.js          # Ranking routes
+│   │   ├── checkInOut.route.js       # Check-in/out routes
+│   │   └── index.js                  # Central exports
 │   │
 │   ├── 📁 seeders/             # Database Seeders (Dev Only)
 │   │   ├── studentSeeder.js

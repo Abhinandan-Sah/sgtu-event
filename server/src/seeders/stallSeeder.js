@@ -1,5 +1,21 @@
-// Stall Seeder - Seeds demo stalls for event
+/**
+ * Stall Seeder - Production-Ready
+ * 
+ * @description Seeds stalls with auto-generated short QR tokens
+ * @usage npm run seed
+ * @category Seeder
+ * @author SGTU Event Team
+ * @version 2.0.0 (Production-Ready)
+ * 
+ * Features:
+ * - Auto-generates short QR tokens (33 chars)
+ * - Format: STALL_{number}_{timestamp}_{random_id}
+ * - Production-safe with error handling
+ * - No manual regeneration needed
+ */
+
 import { query } from '../config/db.js';
+import crypto from 'crypto';
 
 const stalls = [
   {
@@ -58,8 +74,16 @@ export async function seedStalls(schools) {
     const school_id = schools[schoolIndex].id;
 
     try {
-      // Generate placeholder QR token (production will use QRCodeService)
-      const qrToken = `STALL_${stall.stall_number}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Generate production-ready short QR token (33 chars)
+      // Format: STALL_{stall_number}_{timestamp}_{random_id}
+      const timestamp = Date.now();
+      const randomId = crypto.randomBytes(4).toString('base64').replace(/[^a-z0-9]/gi, '').toLowerCase().substring(0, 6);
+      const qrToken = `STALL_${stall.stall_number}_${timestamp}_${randomId}`;
+      
+      // Validation: Ensure token is not too long
+      if (qrToken.length > 50) {
+        throw new Error(`Generated token too long: ${qrToken.length} chars`);
+      }
       
       const insertQuery = `
         INSERT INTO stalls (

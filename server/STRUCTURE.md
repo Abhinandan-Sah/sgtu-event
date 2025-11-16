@@ -8,12 +8,37 @@ Production-ready folder structure following industry best practices.
 server/
 ├── src/
 │   ├── config/          # Configuration files (DB, Redis, etc.)
-│   ├── controllers/     # Request handlers (admin, student, stall, volunteer)
+│   ├── controllers/     # Request handlers (FLAT STRUCTURE)
+│   │   ├── admin.controller.js
+│   │   ├── student.controller.js
+│   │   ├── volunteer.controller.js
+│   │   ├── stall.controller.js
+│   │   ├── feedback.controller.js
+│   │   ├── ranking.controller.js
+│   │   ├── checkInOut.controller.js
+│   │   └── index.js
 │   ├── helpers/         # Shared helper functions
 │   ├── middleware/      # Express middleware (auth, error, rate-limit)
 │   ├── migrations/      # Database schema migrations
-│   ├── models/          # Data models (Student, Stall, etc.)
-│   ├── routes/          # API route definitions
+│   ├── models/          # Data models (FLAT STRUCTURE)
+│   │   ├── Admin.model.js
+│   │   ├── Student.model.js
+│   │   ├── Volunteer.model.js
+│   │   ├── Stall.model.js
+│   │   ├── Feedback.model.js
+│   │   ├── Ranking.model.js
+│   │   ├── CheckInOut.model.js
+│   │   ├── School.model.js
+│   │   └── index.js
+│   ├── routes/          # API route definitions (FLAT STRUCTURE)
+│   │   ├── admin.route.js
+│   │   ├── student.route.js
+│   │   ├── volunteer.route.js
+│   │   ├── stall.route.js
+│   │   ├── feedback.route.js
+│   │   ├── ranking.route.js
+│   │   ├── checkInOut.route.js
+│   │   └── index.js
 │   ├── seeders/         # Database seeders for development
 │   ├── services/        # Business logic (QR, Analytics, Notification)
 │   ├── tests/           # Test suite
@@ -36,10 +61,10 @@ server/
 | Directory | Purpose | Examples |
 |-----------|---------|----------|
 | `config/` | Environment configuration | `db.js`, `redis.js` |
-| `controllers/` | HTTP request handlers | `studentController.js` |
+| `controllers/` | HTTP request handlers (FLAT) | `student.controller.js`, `admin.controller.js` |
 | `middleware/` | Request interceptors | `auth.js`, `errorHandler.js` |
-| `models/` | Data models & DB queries | `Student.model.js` |
-| `routes/` | API endpoint definitions | `/api/student/*` |
+| `models/` | Data models & DB queries (FLAT) | `Student.model.js`, `Stall.model.js` |
+| `routes/` | API endpoint definitions (FLAT) | `student.route.js`, `admin.route.js` |
 | `services/` | Business logic | `qrCode.js`, `analytics.js` |
 | `validations/` | Input validation | Schema validators |
 
