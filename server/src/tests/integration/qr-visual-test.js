@@ -1,6 +1,28 @@
-// Visual QR Code Test - Generate and display QR codes for scanning
-import QRCodeService from '../services/qrCode.js';
-import { query } from '../config/db.js';
+/**
+ * QR Visual Integration Test
+ * 
+ * @description Interactive web server for manual QR code testing with real phones
+ * @usage npm run test:visual
+ * @category Integration Test
+ * @author SGTU Event Team
+ * @version 2.0.0
+ * 
+ * Features:
+ * - Express server on http://localhost:3001
+ * - Displays real QR codes from production database
+ * - Shows 3 students + 2 stalls with full details
+ * - Copy token functionality for debugging
+ * - Refresh button for cache testing
+ * 
+ * Use Cases:
+ * - Manual phone scanning validation
+ * - Visual QR density comparison
+ * - Pre-production smoke testing
+ * - Token format verification
+ */
+
+import QRCodeService from '../../services/qrCode.js';
+import { query } from '../../config/db.js';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';

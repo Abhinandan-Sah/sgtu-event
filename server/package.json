@@ -9,9 +9,14 @@
     "dev": "nodemon src/index.js",
     "seed": "node src/seeders/index.js",
     "test": "jest --coverage",
-    "test:qr": "node src/tests/qr-service.test.js",
-    "warm-cache": "node src/utils/warm-qr-cache.js",
-    "qr:scan": "node src/tests/qr-visual-test.js"
+    "test:unit": "node src/tests/unit/qr-service.test.js",
+    "test:visual": "node src/tests/integration/qr-visual-test.js",
+    "test:compare": "node src/tests/helpers/token-comparison.js",
+    "test:uniqueness": "node src/tests/helpers/token-uniqueness.js",
+    "test:scan": "node src/tests/helpers/qr-scan-validator.js",
+    "test:all": "npm run test:unit && npm run test:compare && npm run test:uniqueness",
+    "qr:regenerate": "node src/scripts/regenerate-qr-tokens.js",
+    "qr:warm-cache": "node src/utils/warm-qr-cache.js"
   },
   "keywords": ["event-management", "sgtu"],
   "author": "",

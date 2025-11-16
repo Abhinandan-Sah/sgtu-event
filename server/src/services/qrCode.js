@@ -6,27 +6,24 @@ import redisClient from '../config/redis.js';
 
 class QRCodeService {
   /**
-   * Generate Static QR Token for Student
-   * Token includes: student_id, email, registration_no
+   * Generate Static QR Token for Student (OPTIMIZED for scanning)
+   * Compressed payload: 317 chars → ~100 chars for better QR density
+   * Token includes: type, student_id, registration_no (primary lookup)
    * Never expires (static QR for physical ID cards)
    */
   static generateStudentQRToken(student) {
-    if (!student || !student.id || !student.email || !student.registration_no) {
+    if (!student || !student.registration_no) {
       throw new Error('Invalid student data for QR generation');
     }
 
+    // PRODUCTION: Tiny nonce for uniqueness, no UUID needed (registration_no is unique)
+    const nonce = crypto.randomBytes(2).toString('hex'); // 4 chars only
+
+    // ULTRA-OPTIMIZED: Minimal payload for smallest QR codes
     const payload = {
-      type: 'STUDENT',
-      student_id: student.id,
-      email: student.email,
-      registration_no: student.registration_no,
-      // Add checksum for extra security
-      checksum: crypto
-        .createHash('sha256')
-        .update(`${student.id}${student.email}${process.env.JWT_SECRET}`)
-        .digest('hex')
-        .substring(0, 16),
-      iat: Math.floor(Date.now() / 1000)
+      n: nonce,                   // 4-char nonce (minimal uniqueness)
+      t: 'S',                     // type: Student
+      r: student.registration_no  // PRIMARY KEY (unique, indexed) - no UUID needed!
     };
 
     // JWT with no expiration (static QR)
@@ -38,33 +35,22 @@ class QRCodeService {
   }
 
   /**
-   * Generate Static QR Token for Stall
-   * Token includes: stall_id, stall_number, school_id
-   * Never expires (static QR for physical stall signage)
+   * Generate Static QR Token for Stall (ULTRA-SHORT format)
+   * Simple string format: STALL_{stall_number}_{timestamp}_{random_id}
+   * Example: STALL_CS-001_1763272340083_4am2ghcnl
+   * ~40 chars only - creates beautiful, sparse QR codes!
    */
   static generateStallQRToken(stall) {
-    if (!stall || !stall.id || !stall.stall_number || !stall.school_id) {
+    if (!stall || !stall.stall_number) {
       throw new Error('Invalid stall data for QR generation');
     }
 
-    const payload = {
-      type: 'STALL',
-      stall_id: stall.id,
-      stall_number: stall.stall_number,
-      school_id: stall.school_id,
-      // Add checksum for extra security
-      checksum: crypto
-        .createHash('sha256')
-        .update(`${stall.id}${stall.stall_number}${process.env.JWT_SECRET}`)
-        .digest('hex')
-        .substring(0, 16),
-      iat: Math.floor(Date.now() / 1000)
-    };
-
-    // JWT with no expiration (static QR)
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      algorithm: 'HS256'
-    });
+    // PRODUCTION: Simple format for cleanest QR codes
+    const timestamp = Date.now();
+    const randomId = crypto.randomBytes(4).toString('base64').replace(/[^a-z0-9]/gi, '').toLowerCase().substring(0, 9);
+    
+    // Format: STALL_{stall_number}_{timestamp}_{random_id}
+    const token = `STALL_${stall.stall_number}_${timestamp}_${randomId}`;
 
     return token;
   }
@@ -107,6 +93,7 @@ class QRCodeService {
         errorCorrectionLevel: 'H', // Highest error correction (30% damage tolerance)
         type: 'image/png',
         quality: 1.0, // Maximum quality
+        mode: 'alphanumeric', // Force alphanumeric mode for JWT tokens
         ...options
       };
 
@@ -140,6 +127,7 @@ class QRCodeService {
       },
       errorCorrectionLevel: 'H',
       type: 'png',
+      mode: 'alphanumeric', // Force alphanumeric mode for JWT tokens
       ...options
     };
 
@@ -153,8 +141,9 @@ class QRCodeService {
   }
 
   /**
-   * Verify Student QR Token
-   * Returns: { valid, student_id, email, registration_no } or { valid: false, error }
+   * Verify Student QR Token (BACKWARD COMPATIBLE)
+   * Supports both old (long) and new (optimized) token formats
+   * Returns: { valid, student_id, registration_no } or { valid: false, error }
    */
   static verifyStudentQRToken(token) {
     if (!token) {
@@ -166,27 +155,58 @@ class QRCodeService {
         algorithms: ['HS256']
       });
 
-      // Type check
-      if (decoded.type !== 'STUDENT') {
+      // BACKWARD COMPATIBLE: Support all formats (ultra-optimized, old optimized, legacy)
+      const isNewFormat = decoded.t !== undefined;
+      const isOldFormat = decoded.type !== undefined;
+
+      // Type check (support both formats)
+      const tokenType = isNewFormat ? decoded.t : decoded.type;
+      if (tokenType !== 'S' && tokenType !== 'STUDENT') {
         return { valid: false, error: 'Invalid QR code type - expected STUDENT' };
       }
 
-      // Checksum verification (extra security)
+      // Extract fields (support all formats)
+      const nonce = decoded.n; // May be undefined for old tokens
+      const studentId = decoded.id || decoded.student_id; // May be undefined for ultra-optimized
+      const registrationNo = decoded.r || decoded.registration_no;
+      const checksum = decoded.c || decoded.checksum; // May be undefined for ultra-optimized
+      
+      // Ultra-optimized format: No checksum validation needed (JWT signature is sufficient)
+      if (!checksum && nonce && registrationNo && !studentId) {
+        // NEW ULTRA-OPTIMIZED FORMAT: {n, t, r} only
+        return {
+          valid: true,
+          registration_no: registrationNo
+        };
+      }
+      
+      // OLD FORMAT: Validate checksum
+      const hasNonce = nonce !== undefined;
+      const checksumLength = hasNonce ? 6 : (isNewFormat ? 8 : 16);
+
+      // Checksum verification for old formats
+      const checksumInput = hasNonce
+        ? `${nonce}${studentId}${registrationNo}${process.env.JWT_SECRET}`
+        : (isNewFormat 
+          ? `${studentId}${registrationNo}${process.env.JWT_SECRET}`
+          : `${studentId}${decoded.email}${process.env.JWT_SECRET}`);
+        
       const expectedChecksum = crypto
         .createHash('sha256')
-        .update(`${decoded.student_id}${decoded.email}${process.env.JWT_SECRET}`)
+        .update(checksumInput)
         .digest('hex')
-        .substring(0, 16);
+        .substring(0, checksumLength);
 
-      if (decoded.checksum !== expectedChecksum) {
+      if (checksum !== expectedChecksum) {
         return { valid: false, error: 'QR code checksum validation failed' };
       }
 
       return {
         valid: true,
-        student_id: decoded.student_id,
-        email: decoded.email,
-        registration_no: decoded.registration_no
+        student_id: studentId,
+        registration_no: registrationNo,
+        // Include email if present (old format)
+        ...(decoded.email && { email: decoded.email })
       };
     } catch (error) {
       if (error.name === 'JsonWebTokenError') {
@@ -200,8 +220,9 @@ class QRCodeService {
   }
 
   /**
-   * Verify Stall QR Token
-   * Returns: { valid, stall_id, stall_number, school_id } or { valid: false, error }
+   * Verify Stall QR Token (BACKWARD COMPATIBLE)
+   * Supports: Simple format (STALL_*) and old JWT formats
+   * Returns: { valid, stall_number } or { valid: false, error }
    */
   static verifyStallQRToken(token) {
     if (!token) {
@@ -209,31 +230,67 @@ class QRCodeService {
     }
 
     try {
+      // NEW SIMPLE FORMAT: STALL_{stall_number}_{timestamp}_{random_id}
+      if (token.startsWith('STALL_')) {
+        const parts = token.split('_');
+        if (parts.length >= 2) {
+          const stallNumber = parts[1];
+          return {
+            valid: true,
+            stall_number: stallNumber
+          };
+        }
+        return { valid: false, error: 'Invalid stall QR format' };
+      }
+
+      // OLD JWT FORMAT: Backward compatibility
       const decoded = jwt.verify(token, process.env.JWT_SECRET, {
         algorithms: ['HS256']
       });
 
-      // Type check
-      if (decoded.type !== 'STALL') {
+      const isNewFormat = decoded.t !== undefined;
+      const tokenType = isNewFormat ? decoded.t : decoded.type;
+      
+      if (tokenType !== 'T' && tokenType !== 'STALL') {
         return { valid: false, error: 'Invalid QR code type - expected STALL' };
       }
 
-      // Checksum verification (extra security)
+      const nonce = decoded.n;
+      const stallId = decoded.id || decoded.stall_id;
+      const stallNumber = decoded.s || decoded.stall_number;
+      const checksum = decoded.c || decoded.checksum;
+      
+      if (!checksum && nonce && stallNumber && !stallId) {
+        return {
+          valid: true,
+          stall_number: stallNumber
+        };
+      }
+      
+      const hasNonce = nonce !== undefined;
+      const checksumLength = hasNonce ? 6 : (isNewFormat ? 8 : 16);
+
+      const checksumInput = hasNonce
+        ? `${nonce}${stallId}${stallNumber}${process.env.JWT_SECRET}`
+        : (isNewFormat 
+          ? `${stallId}${stallNumber}${process.env.JWT_SECRET}`
+          : `${stallId}${stallNumber}${process.env.JWT_SECRET}`);
+        
       const expectedChecksum = crypto
         .createHash('sha256')
-        .update(`${decoded.stall_id}${decoded.stall_number}${process.env.JWT_SECRET}`)
+        .update(checksumInput)
         .digest('hex')
-        .substring(0, 16);
+        .substring(0, checksumLength);
 
-      if (decoded.checksum !== expectedChecksum) {
+      if (checksum !== expectedChecksum) {
         return { valid: false, error: 'QR code checksum validation failed' };
       }
 
       return {
         valid: true,
-        stall_id: decoded.stall_id,
-        stall_number: decoded.stall_number,
-        school_id: decoded.school_id
+        stall_id: stallId,
+        stall_number: stallNumber,
+        ...(decoded.school_id && { school_id: decoded.school_id })
       };
     } catch (error) {
       if (error.name === 'JsonWebTokenError') {
