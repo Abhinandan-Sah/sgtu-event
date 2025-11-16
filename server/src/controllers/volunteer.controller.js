@@ -204,20 +204,33 @@ const scanStudentQR = async (req, res, next) => {
 
     console.log('✅ [SCAN] Student found:', student.full_name);
 
-    // 3️⃣ 🎯 SMART LOGIC: Determine action based on current status
+    // 🔒 3️⃣ SECURITY CHECK: Verify the logged-in user is scanning their OWN QR code
+    // Get the logged-in user's details (they should be a student)
+    const loggedInStudent = await Student.findById(req.user.id, query);
+    
+    if (!loggedInStudent) {
+      return errorResponse(res, 'Only students can scan their own QR codes', 403);
+    }
+
+    // Compare the logged-in student's QR token with the scanned token
+    if (loggedInStudent.qr_code_token !== qr_code_token) {
+      return errorResponse(res, 'You can only scan your own QR code', 403);
+    }
+
+    // 4️⃣ 🎯 SMART LOGIC: Determine action based on current status
     const isCurrentlyInside = student.is_inside_event;
     const action = isCurrentlyInside ? 'EXIT' : 'ENTRY';
     
     console.log(`🎯 [SCAN] Current status: ${isCurrentlyInside ? 'INSIDE' : 'OUTSIDE'}`);
     console.log(`🎯 [SCAN] Action to perform: ${action}`);
 
-    // 4️⃣ Store the check-in time BEFORE updating (for duration calculation)
+    // 5️⃣ Store the check-in time BEFORE updating (for duration calculation)
     const previousCheckInTime = student.last_checkin_at;
 
-    // 5️⃣ Process check-in/out FIRST (toggles is_inside_event automatically and updates timestamps)
+    // 6️⃣ Process check-in/out FIRST (toggles is_inside_event automatically and updates timestamps)
     const updatedStudent = await Student.processCheckInOut(student.id, query);
 
-    // 6️⃣ Calculate duration AFTER checkout using the previous check-in time
+    // 7️⃣ Calculate duration AFTER checkout using the previous check-in time
     let durationMinutes = 0;
     if (action === 'EXIT' && previousCheckInTime) {
       const checkInTime = new Date(previousCheckInTime);
@@ -231,7 +244,7 @@ const scanStudentQR = async (req, res, next) => {
       await Student.updateActiveDuration(student.id, durationMinutes, query);
     }
 
-    // 7️⃣ Update volunteer's scan count
+    // 8️⃣ Update volunteer's scan count
     await query(
       'UPDATE volunteers SET total_scans_performed = total_scans_performed + 1 WHERE id = $1',
       [req.user.id]
@@ -239,7 +252,7 @@ const scanStudentQR = async (req, res, next) => {
 
     console.log(`✅ [SCAN] ${action} successful for ${student.full_name}`);
 
-    // 8️⃣ Return different response based on action
+    // 9️⃣ Return different response based on action
     const responseData = {
       student: {
         id: updatedStudent.id,

@@ -192,6 +192,97 @@ const getStats = async (req, res, next) => {
   }
 };
 
+/**
+ * Get top schools based on student rankings (Category 2 - ADMIN ONLY)
+ * @route GET /api/admin/top-schools
+ */
+const getTopSchools = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+
+    const queryText = `
+      SELECT 
+        sc.id as school_id,
+        sc.school_name,
+        COUNT(DISTINCT s.id) as total_students_ranked,
+        SUM(CASE WHEN st.school_id = sc.id THEN 
+          CASE r.rank
+            WHEN 1 THEN 5
+            WHEN 2 THEN 3
+            WHEN 3 THEN 1
+            ELSE 0
+          END
+        ELSE 0 END) as school_score,
+        SUM(CASE WHEN st.school_id = sc.id AND r.rank = 1 THEN 1 ELSE 0 END) as rank_1_count,
+        SUM(CASE WHEN st.school_id = sc.id AND r.rank = 2 THEN 1 ELSE 0 END) as rank_2_count,
+        SUM(CASE WHEN st.school_id = sc.id AND r.rank = 3 THEN 1 ELSE 0 END) as rank_3_count,
+        COUNT(DISTINCT CASE WHEN st.school_id = sc.id THEN st.id END) as ranked_stalls_count
+      FROM schools sc
+      LEFT JOIN students s ON s.school_id = sc.id AND s.has_completed_ranking = true
+      LEFT JOIN rankings r ON r.student_id = s.id
+      LEFT JOIN stalls st ON r.stall_id = st.id
+      WHERE s.has_completed_ranking = true
+      GROUP BY sc.id, sc.school_name
+      HAVING SUM(CASE WHEN st.school_id = sc.id THEN 
+        CASE r.rank
+          WHEN 1 THEN 5
+          WHEN 2 THEN 3
+          WHEN 3 THEN 1
+          ELSE 0
+        END
+      ELSE 0 END) > 0
+      ORDER BY school_score DESC, total_students_ranked DESC
+      LIMIT $1
+    `;
+
+    const topSchools = await query(queryText, [limit]);
+
+    // Get overall stats
+    const statsQuery = `
+      SELECT 
+        COUNT(DISTINCT s.id) as total_students_participated,
+        COUNT(DISTINCT sc.id) as total_schools_participated,
+        COUNT(DISTINCT st.id) as total_stalls_ranked
+      FROM students s
+      LEFT JOIN rankings r ON r.student_id = s.id
+      LEFT JOIN stalls st ON r.stall_id = st.id
+      LEFT JOIN schools sc ON s.school_id = sc.id
+      WHERE s.has_completed_ranking = true
+    `;
+
+    const stats = await query(statsQuery);
+
+    return successResponse(res, {
+      top_schools: topSchools.map((school, index) => ({
+        position: index + 1,
+        school_id: school.school_id,
+        school_name: school.school_name,
+        total_score: parseInt(school.school_score),
+        breakdown: {
+          rank_1_votes: parseInt(school.rank_1_count),
+          rank_2_votes: parseInt(school.rank_2_count),
+          rank_3_votes: parseInt(school.rank_3_count)
+        },
+        students_participated: parseInt(school.total_students_ranked),
+        stalls_ranked: parseInt(school.ranked_stalls_count)
+      })),
+      scoring_system: {
+        rank_1: '5 points',
+        rank_2: '3 points',
+        rank_3: '1 point',
+        description: 'Schools earn points when their stalls are ranked by students from their own school'
+      },
+      overall_stats: {
+        total_students_participated: parseInt(stats[0].total_students_participated),
+        total_schools_participated: parseInt(stats[0].total_schools_participated),
+        total_stalls_ranked: parseInt(stats[0].total_stalls_ranked)
+      }
+    }, 'Top schools retrieved successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   login,
   logout,
@@ -200,5 +291,6 @@ export default {
   getAllStudents,
   getAllVolunteers,
   getAllStalls,
-  getStats
+  getStats,
+  getTopSchools
 };

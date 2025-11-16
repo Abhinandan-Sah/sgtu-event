@@ -24,4 +24,9 @@ router.post('/scan-stall', authenticateToken, studentController.scanStall);
 router.post('/submit-feedback', authenticateToken, studentController.submitFeedback);
 router.get('/my-visits', authenticateToken, studentController.getMyVisits);
 
+// School ranking routes (Category 2 - students rank their own school's stalls)
+router.get('/my-school-stalls', authenticateToken, studentController.getMySchoolStalls);
+router.post('/submit-school-ranking', authenticateToken, studentController.submitSchoolRanking);
+router.get('/my-school-ranking', authenticateToken, studentController.getMySchoolRanking);
+
 export default router;

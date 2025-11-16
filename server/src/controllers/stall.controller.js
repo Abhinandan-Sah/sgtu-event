@@ -1,6 +1,8 @@
 import Stall from '../models/Stall.model.js';
 import QRCodeService from '../services/qrCode.js';
 import { successResponse, errorResponse } from '../helpers/response.js';
+import { query } from '../config/db.js';
+
 
 /**
  * Stall Controller
@@ -13,7 +15,7 @@ import { successResponse, errorResponse } from '../helpers/response.js';
  */
 const getAllStalls = async (req, res, next) => {
   try {
-    const stalls = await Stall.findAll();
+    const stalls = await Stall.findAll(query);
     return successResponse(res, stalls);
   } catch (error) {
     next(error);
@@ -27,7 +29,7 @@ const getAllStalls = async (req, res, next) => {
 const getStallById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const stall = await Stall.findById(id);
+    const stall = await Stall.findById(id, query);
 
     if (!stall) {
       return errorResponse(res, 'Stall not found', 404);
@@ -46,7 +48,7 @@ const getStallById = async (req, res, next) => {
 const getStallByNumber = async (req, res, next) => {
   try {
     const { stallNumber } = req.params;
-    const stall = await Stall.findByStallNumber(parseInt(stallNumber));
+    const stall = await Stall.findByStallNumber(parseInt(stallNumber), query);
 
     if (!stall) {
       return errorResponse(res, 'Stall not found', 404);
@@ -65,7 +67,7 @@ const getStallByNumber = async (req, res, next) => {
 const getStallQRCode = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const stall = await Stall.findById(id);
+    const stall = await Stall.findById(id, query);
 
     if (!stall) {
       return errorResponse(res, 'Stall not found', 404);
@@ -96,7 +98,7 @@ const getStallQRCode = async (req, res, next) => {
 const getStallsBySchool = async (req, res, next) => {
   try {
     const { schoolName } = req.params;
-    const stalls = await Stall.findBySchoolName(schoolName);
+    const stalls = await Stall.findBySchoolName(schoolName, query);
     return successResponse(res, stalls);
   } catch (error) {
     next(error);
@@ -112,7 +114,7 @@ const getStallStats = async (req, res, next) => {
     const { id } = req.params;
     const CheckInOut = require('../models/CheckInOut.model');
     
-    const stall = await Stall.findById(id);
+    const stall = await Stall.findById(id, query);
     if (!stall) {
       return errorResponse(res, 'Stall not found', 404);
     }
@@ -143,7 +145,7 @@ const createStall = async (req, res, next) => {
     }
 
     // Check if stall number already exists
-    const existingStall = await Stall.findByStallNumber(stall_number);
+    const existingStall = await Stall.findByStallNumber(stall_number, query);
     if (existingStall) {
       return errorResponse(res, 'Stall number already exists', 409);
     }
@@ -159,7 +161,7 @@ const createStall = async (req, res, next) => {
       qr_code_token: qrCodeToken
     };
 
-    const newStall = await Stall.create(stallData);
+    const newStall = await Stall.create(stallData, query);
 
     return successResponse(res, newStall, 'Stall created successfully', 201);
   } catch (error) {
@@ -180,7 +182,7 @@ const updateStall = async (req, res, next) => {
     if (stall_name) updateData.stall_name = stall_name;
     if (description !== undefined) updateData.description = description;
 
-    const updatedStall = await Stall.update(id, updateData);
+    const updatedStall = await Stall.update(id, updateData, query);
     if (!updatedStall) {
       return errorResponse(res, 'Stall not found', 404);
     }
@@ -199,7 +201,7 @@ const deleteStall = async (req, res, next) => {
   try {
     const { id } = req.params;
     
-    const deleted = await Stall.delete(id);
+    const deleted = await Stall.delete(id, query);
     if (!deleted) {
       return errorResponse(res, 'Stall not found', 404);
     }

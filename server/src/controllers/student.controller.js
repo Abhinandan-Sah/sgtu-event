@@ -2,6 +2,7 @@ import Student from '../models/Student.model.js';
 import CheckInOut from '../models/CheckInOut.model.js';
 import Stall from '../models/Stall.model.js';
 import Feedback from '../models/Feedback.model.js';
+import Ranking from '../models/Ranking.model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import QRCodeService from '../services/qrCode.js';
@@ -333,9 +334,9 @@ const submitFeedback = async (req, res, next) => {
     // Check if student is inside event
     const student = await Student.findById(req.user.id, query);
     
-    console.log('🔍 [SUBMIT-FEEDBACK] JWT user ID:', req.user.id);
-    console.log('🔍 [SUBMIT-FEEDBACK] JWT user data:', req.user);
-    console.log('🔍 [SUBMIT-FEEDBACK] Student found:', student ? student.full_name : 'NULL');
+    // console.log(' [SUBMIT-FEEDBACK] JWT user ID:', req.user.id);
+    // console.log('[SUBMIT-FEEDBACK] JWT user data:', req.user);
+    // console.log('[SUBMIT-FEEDBACK] Student found:', student ? student.full_name : 'NULL');
     
     if (!student) {
       return errorResponse(res, 'Student not found. Please login again.', 404);
@@ -426,6 +427,228 @@ const getMyVisits = async (req, res, next) => {
   }
 };
 
+/**
+ * Get student's school stalls for ranking (Category 2)
+ * @route GET /api/student/my-school-stalls
+ */
+const getMySchoolStalls = async (req, res, next) => {
+  try {
+    const student = await Student.findById(req.user.id, query);
+    
+    if (!student) {
+      return errorResponse(res, 'Student not found', 404);
+    }
+
+    if (student.has_completed_ranking) {
+      return errorResponse(res, 'You have already submitted your school stall rankings', 409);
+    }
+
+    const queryText = `
+      SELECT 
+        st.id as stall_id,
+        st.stall_number,
+        st.stall_name,
+        st.description,
+        st.location,
+        sc.school_name,
+        COALESCE(st.total_feedback_count, 0) as total_feedbacks,
+        COALESCE(st.rank_1_votes, 0) as rank_1_votes,
+        COALESCE(st.rank_2_votes, 0) as rank_2_votes,
+        COALESCE(st.rank_3_votes, 0) as rank_3_votes
+      FROM stalls st
+      LEFT JOIN schools sc ON st.school_id = sc.id
+      WHERE st.school_id = $1 AND st.is_active = true
+      ORDER BY st.stall_number ASC
+    `;
+
+    const stalls = await query(queryText, [student.school_id]);
+
+    if (stalls.length < 3) {
+      return errorResponse(res, `Your school has only ${stalls.length} stalls. Minimum 3 required.`, 400);
+    }
+
+    return successResponse(res, {
+      student_info: {
+        id: student.id,
+        registration_no: student.registration_no,
+        full_name: student.full_name,
+        school_name: student.school_name
+      },
+      stalls: stalls.map(s => ({
+        stall_id: s.stall_id,
+        stall_number: s.stall_number,
+        stall_name: s.stall_name,
+        description: s.description,
+        location: s.location
+      })),
+      total_stalls: stalls.length,
+      instructions: 'Select top 3 stalls from YOUR SCHOOL ONLY. Ranks: 1 (best), 2 (second), 3 (third). ONE-TIME submission.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Submit school stall rankings (Category 2 - ONE-TIME only)
+ * @route POST /api/student/submit-school-ranking
+ */
+const submitSchoolRanking = async (req, res, next) => {
+  try {
+    const { rankings } = req.body; // [{ stall_id, rank }]
+
+    if (!Array.isArray(rankings) || rankings.length !== 3) {
+      return errorResponse(res, 'Must provide exactly 3 stall rankings', 400);
+    }
+
+    const ranks = rankings.map(r => r.rank).sort();
+    if (ranks.join(',') !== '1,2,3') {
+      return errorResponse(res, 'Rankings must be exactly 1, 2, and 3 (no duplicates)', 400);
+    }
+
+    const stallIds = rankings.map(r => r.stall_id);
+    if (new Set(stallIds).size !== 3) {
+      return errorResponse(res, 'Must rank 3 different stalls', 400);
+    }
+
+    const student = await Student.findById(req.user.id, query);
+    
+    if (!student) {
+      return errorResponse(res, 'Student not found', 404);
+    }
+
+    if (student.has_completed_ranking) {
+      return errorResponse(res, 'You have already submitted your rankings. This is ONE-TIME only.', 409);
+    }
+
+    // Verify ALL stalls belong to student's school
+    const stallCheckQuery = `
+      SELECT st.id, st.stall_name, st.school_id, sc.school_name
+      FROM stalls st
+      LEFT JOIN schools sc ON st.school_id = sc.id
+      WHERE st.id = ANY($1::uuid[])
+    `;
+    
+    const stallsToRank = await query(stallCheckQuery, [stallIds]);
+
+    if (stallsToRank.length !== 3) {
+      return errorResponse(res, 'One or more stalls not found', 404);
+    }
+
+    const invalidStalls = stallsToRank.filter(s => s.school_id !== student.school_id);
+    if (invalidStalls.length > 0) {
+      return errorResponse(res, `You can only rank stalls from YOUR school. Invalid: ${invalidStalls.map(s => s.stall_name).join(', ')}`, 403);
+    }
+
+    try {
+      await query('BEGIN');
+
+      const rankingData = rankings.map(r => ({
+        student_id: req.user.id,
+        stall_id: r.stall_id,
+        rank: r.rank
+      }));
+
+      await Ranking.bulkCreate(rankingData, query);
+
+      await query(
+        `UPDATE students 
+         SET has_completed_ranking = true,
+             selected_category = 'CATEGORY_2',
+             updated_at = NOW()
+         WHERE id = $1`,
+        [req.user.id]
+      );
+
+      for (const ranking of rankings) {
+        const columnName = ranking.rank === 1 ? 'rank_1_votes' 
+                         : ranking.rank === 2 ? 'rank_2_votes' 
+                         : 'rank_3_votes';
+        
+        await query(
+          `UPDATE stalls 
+           SET ${columnName} = ${columnName} + 1,
+               weighted_score = (rank_1_votes * 5) + (rank_2_votes * 3) + (rank_3_votes * 1),
+               updated_at = NOW()
+           WHERE id = $1`,
+          [ranking.stall_id]
+        );
+      }
+
+      await query('COMMIT');
+
+      const rankedStallsQuery = `
+        SELECT r.rank, st.stall_name, st.stall_number
+        FROM rankings r
+        LEFT JOIN stalls st ON r.stall_id = st.id
+        WHERE r.student_id = $1
+        ORDER BY r.rank ASC
+      `;
+      
+      const rankedStalls = await query(rankedStallsQuery, [req.user.id]);
+
+      return successResponse(res, {
+        message: '🎉 Rankings submitted successfully!',
+        submitted_rankings: rankedStalls.map(r => ({
+          rank: r.rank,
+          stall_name: r.stall_name,
+          stall_number: r.stall_number
+        })),
+        note: 'Your rankings are recorded and cannot be changed.'
+      }, 'School rankings submitted', 201);
+
+    } catch (error) {
+      await query('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get student's submitted school ranking (view only)
+ * @route GET /api/student/my-school-ranking
+ */
+const getMySchoolRanking = async (req, res, next) => {
+  try {
+    const student = await Student.findById(req.user.id, query);
+    
+    if (!student || !student.has_completed_ranking) {
+      return errorResponse(res, 'No rankings submitted yet', 404);
+    }
+
+    const queryText = `
+      SELECT 
+        r.rank,
+        r.submitted_at,
+        st.stall_name,
+        st.stall_number,
+        st.description
+      FROM rankings r
+      LEFT JOIN stalls st ON r.stall_id = st.id
+      WHERE r.student_id = $1
+      ORDER BY r.rank ASC
+    `;
+
+    const rankings = await query(queryText, [req.user.id]);
+
+    return successResponse(res, {
+      rankings: rankings.map(r => ({
+        rank: r.rank,
+        stall_name: r.stall_name,
+        stall_number: r.stall_number,
+        description: r.description
+      })),
+      submitted_at: rankings[0].submitted_at,
+      note: 'This ranking was ONE-TIME and cannot be changed.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   login,
   register,
@@ -436,5 +659,8 @@ export default {
   updateProfile,
   scanStall,
   submitFeedback,
-  getMyVisits
+  getMyVisits,
+  getMySchoolStalls,
+  submitSchoolRanking,
+  getMySchoolRanking
 };

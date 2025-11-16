@@ -20,4 +20,7 @@ router.get('/volunteers', authenticateToken, adminController.getAllVolunteers);
 router.get('/stalls', authenticateToken, adminController.getAllStalls);
 router.get('/stats', authenticateToken, adminController.getStats);
 
+// School ranking results (Category 2 - ADMIN ONLY)
+router.get('/top-schools', authenticateToken, adminController.getTopSchools);
+
 export default router;

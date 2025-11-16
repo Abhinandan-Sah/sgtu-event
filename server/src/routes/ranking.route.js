@@ -11,7 +11,8 @@ import { authenticateToken } from '../middleware/auth.js';
 // Public routes (anyone can view rankings)
 router.get('/', rankingController.getAllRankings);
 router.get('/stall/:stallId', rankingController.getRankingByStall);
-router.get('/top/:limit', rankingController.getTopRankings);
+router.get('/stalls/top/:limit', rankingController.getTopRankings);
+router.get('/students/top/:limit', rankingController.getTopStudents);
 
 // Protected routes (admin only)
 router.post('/', authenticateToken, rankingController.createRanking);
