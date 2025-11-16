@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Test</title>
+</head>
+<body>
+    <h1>QR Code Generation Test</h1>
+    <div style="padding: 20px;">
+        <h2>Test 1: QR Server API</h2>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=test123" alt="QR Test 1">
+        
+        <h2>Test 2: Google Charts API</h2>
+        <img src="https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=test456" alt="QR Test 2">
+        
+        <h2>Test 3: With Student Data</h2>
+        <img id="studentQR" src="" alt="Loading..." style="border: 1px solid #ccc;">
+    </div>
+    
+    <script>
+        const studentData = btoa(JSON.stringify({
+            type: 'STUDENT',
+            email: 'test@sgtu.ac.in',
+            registration_no: '2024SGTU99999',
+            timestamp: new Date().toISOString()
+        }));
+        
+        document.getElementById('studentQR').src = 
+            `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(studentData)}`;
+        
+        document.getElementById('studentQR').onerror = function() {
+            this.src = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(studentData)}`;
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network & QR API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .loading { background: #d1ecf1; color: #0c5460; }
+        img { max-width: 300px; margin: 10px 0; display: block; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #5568d3; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Network & QR API Diagnostic Test</h1>
+    <p>This page tests if QR code APIs are accessible from your browser.</p>
+
+    <div class="test-card">
+        <h2>Test 1: Browser Environment</h2>
+        <div id="browserInfo"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 2: QR Server API (Primary)</h2>
+        <button onclick="testQRServerAPI()">Test QR Server</button>
+        <div id="qrServerStatus"></div>
+        <img id="qrServerImage" style="display: none;">
+    </div>
+
+    <div class="test-card">
+        <h2>Test 3: Google Charts API (Fallback)</h2>
+        <button onclick="testGoogleChartsAPI()">Test Google Charts</button>
+        <div id="googleChartsStatus"></div>
+        <img id="googleChartsImage" style="display: none;">
+    </div>
+
+    <div class="test-card">
+        <h2>Test 4: Fetch API Test</h2>
+        <button onclick="testFetchAPI()">Test Fetch</button>
+        <div id="fetchStatus"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test 5: CORS & Network Policies</h2>
+        <button onclick="testCORS()">Test CORS</button>
+        <div id="corsStatus"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>Console Logs</h2>
+        <pre id="consoleLogs"></pre>
+    </div>
+
+    <script>
+        const logs = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logs.push(logEntry);
+            document.getElementById('consoleLogs').textContent = logs.join('\n');
+            console.log(logEntry);
+        }
+
+        // Browser Info
+        document.addEventListener('DOMContentLoaded', () => {
+            const info = `
+                <div class="status success">
+                    <strong>User Agent:</strong> ${navigator.userAgent}<br>
+                    <strong>Platform:</strong> ${navigator.platform}<br>
+                    <strong>Online:</strong> ${navigator.onLine}<br>
+                    <strong>Cookies Enabled:</strong> ${navigator.cookieEnabled}<br>
+                    <strong>Language:</strong> ${navigator.language}<br>
+                    <strong>Current URL:</strong> ${window.location.href}
+                </div>
+            `;
+            document.getElementById('browserInfo').innerHTML = info;
+            log('Browser info loaded');
+        });
+
+        // Test QR Server API
+        function testQRServerAPI() {
+            const statusDiv = document.getElementById('qrServerStatus');
+            const img = document.getElementById('qrServerImage');
+            
+            statusDiv.innerHTML = '<div class="status loading">⏳ Testing QR Server API...</div>';
+            log('Starting QR Server API test');
+            
+            const testData = JSON.stringify({ 
+                type: 'TEST',
+                timestamp: new Date().toISOString(),
+                message: 'Network Test'
+            });
+            const encodedData = btoa(testData);
+            const url = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(encodedData)}`;
+            
+            log(`QR Server URL: ${url}`);
+            
+            img.onload = function() {
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ QR Server API is working!</div>
+                    <p><strong>URL:</strong> <code>${url}</code></p>
+                `;
+                img.style.display = 'block';
+                log('QR Server API: SUCCESS', 'success');
+            };
+            
+            img.onerror = function(e) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ QR Server API failed to load</div>
+                    <p><strong>Possible causes:</strong></p>
+                    <ul>
+                        <li>Network firewall blocking external requests</li>
+                        <li>Ad blocker or browser extension blocking the API</li>
+                        <li>No internet connection</li>
+                        <li>Corporate network restrictions</li>
+                    </ul>
+                `;
+                log('QR Server API: FAILED', 'error');
+                log(`Error: ${e.type}`, 'error');
+            };
+            
+            img.src = url;
+        }
+
+        // Test Google Charts API
+        function testGoogleChartsAPI() {
+            const statusDiv = document.getElementById('googleChartsStatus');
+            const img = document.getElementById('googleChartsImage');
+            
+            statusDiv.innerHTML = '<div class="status loading">⏳ Testing Google Charts API...</div>';
+            log('Starting Google Charts API test');
+            
+            const testData = JSON.stringify({ 
+                type: 'TEST',
+                timestamp: new Date().toISOString(),
+                message: 'Network Test Google'
+            });
+            const encodedData = btoa(testData);
+            const url = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(encodedData)}`;
+            
+            log(`Google Charts URL: ${url}`);
+            
+            img.onload = function() {
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ Google Charts API is working!</div>
+                    <p><strong>URL:</strong> <code>${url}</code></p>
+                `;
+                img.style.display = 'block';
+                log('Google Charts API: SUCCESS', 'success');
+            };
+            
+            img.onerror = function(e) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Google Charts API failed to load</div>
+                    <p><strong>Possible causes:</strong></p>
+                    <ul>
+                        <li>Google services blocked in your region/network</li>
+                        <li>Ad blocker or privacy extension blocking Google</li>
+                        <li>No internet connection</li>
+                    </ul>
+                `;
+                log('Google Charts API: FAILED', 'error');
+                log(`Error: ${e.type}`, 'error');
+            };
+            
+            img.src = url;
+        }
+
+        // Test Fetch API
+        async function testFetchAPI() {
+            const statusDiv = document.getElementById('fetchStatus');
+            statusDiv.innerHTML = '<div class="status loading">⏳ Testing Fetch API...</div>';
+            log('Starting Fetch API test');
+            
+            try {
+                const testData = btoa(JSON.stringify({ test: 'data' }));
+                const url = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(testData)}`;
+                
+                log(`Fetching: ${url}`);
+                const response = await fetch(url, { mode: 'no-cors' });
+                
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ Fetch API is working</div>
+                    <p><strong>Response Type:</strong> ${response.type}</p>
+                    <p><strong>Note:</strong> no-cors mode used (expected for external APIs)</p>
+                `;
+                log('Fetch API: SUCCESS', 'success');
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Fetch API failed</div>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+                log(`Fetch API: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        // Test CORS
+        async function testCORS() {
+            const statusDiv = document.getElementById('corsStatus');
+            statusDiv.innerHTML = '<div class="status loading">⏳ Testing CORS policies...</div>';
+            log('Starting CORS test');
+            
+            const tests = [
+                { name: 'QR Server', url: 'https://api.qrserver.com/v1/create-qr-code/?size=10x10&data=test' },
+                { name: 'Google Charts', url: 'https://chart.googleapis.com/chart?cht=qr&chs=10x10&chl=test' }
+            ];
+            
+            let results = '<ul>';
+            
+            for (const test of tests) {
+                try {
+                    log(`Testing ${test.name}...`);
+                    const response = await fetch(test.url, { method: 'HEAD', mode: 'no-cors' });
+                    results += `<li><strong>${test.name}:</strong> <span style="color: green;">✅ Accessible</span></li>`;
+                    log(`${test.name}: ACCESSIBLE`, 'success');
+                } catch (error) {
+                    results += `<li><strong>${test.name}:</strong> <span style="color: red;">❌ Blocked (${error.message})</span></li>`;
+                    log(`${test.name}: BLOCKED - ${error.message}`, 'error');
+                }
+            }
+            
+            results += '</ul>';
+            
+            statusDiv.innerHTML = `
+                <div class="status warning">
+                    <strong>CORS Test Results:</strong>
+                    ${results}
+                    <p><em>Note: External QR APIs typically use no-cors mode, which is normal.</em></p>
+                </div>
+            `;
+        }
+
+        // Run all tests automatically
+        setTimeout(() => {
+            log('Auto-running all tests...');
+            testQRServerAPI();
+            setTimeout(() => testGoogleChartsAPI(), 1000);
+            setTimeout(() => testFetchAPI(), 2000);
+            setTimeout(() => testCORS(), 3000);
+        }, 500);
+    </script>
+</body>
+</html>
