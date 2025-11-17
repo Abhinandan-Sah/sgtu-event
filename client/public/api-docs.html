@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGT Event API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .info-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .info-box code {
+            background: #f4f4f4;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        nav {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        nav h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        nav ul {
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin: 8px 0;
+        }
+        
+        nav ul li a {
+            color: #555;
+            text-decoration: none;
+            padding: 5px 10px;
+            display: block;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .endpoint {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .endpoint h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+        
+        .method.post { background: #49cc90; color: white; }
+        .method.get { background: #61affe; color: white; }
+        .method.put { background: #fca130; color: white; }
+        .method.delete { background: #f93e3e; color: white; }
+        
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 0.95em;
+        }
+        
+        .section {
+            margin: 40px 0;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        
+        .params {
+            margin: 15px 0;
+        }
+        
+        .params h4 {
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .param-item {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .param-name {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .param-type {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .credentials {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .credentials h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .badge.required {
+            background: #f93e3e;
+            color: white;
+        }
+        
+        .badge.optional {
+            background: #ccc;
+            color: white;
+        }
+        
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            float: right;
+            margin-top: -5px;
+        }
+        
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+        
+        .response-example {
+            margin: 15px 0;
+        }
+        
+        .response-example h4 {
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            nav {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎓 SGT Event Management API</h1>
+        <p>Complete API Documentation for Frontend Developers</p>
+    </header>
+
+    <div class="container">
+        <div class="info-box">
+            <h3>📡 Base URL</h3>
+            <code>http://localhost:5000/api</code>
+            
+            <h3 style="margin-top: 20px;">🔐 Authentication</h3>
+            <p>Most endpoints require JWT token. Include it in the Authorization header:</p>
+            <code>Authorization: Bearer &lt;your-token&gt;</code>
+            
+            <h3 style="margin-top: 20px;">⏱️ Token Expiry</h3>
+            <p>JWT tokens expire after <strong>24 hours</strong></p>
+        </div>
+
+        <div class="credentials">
+            <h4>🔑 Test Credentials</h4>
+            <p><strong>Student:</strong> mansi.jain@sgtu.ac.in / student123</p>
+            <p><strong>Volunteer:</strong> rahul.sharma@sgtu.ac.in / volunteer123</p>
+            <p><strong>Admin:</strong> admin@sgtu.ac.in / admin123</p>
+        </div>
+
+        <nav>
+            <h3>📑 Quick Navigation</h3>
+            <ul>
+                <li><a href="#student-apis">Student APIs</a></li>
+                <li><a href="#volunteer-apis">Volunteer APIs</a></li>
+                <li><a href="#admin-apis">Admin APIs</a></li>
+                <li><a href="#stall-apis">Stall APIs</a></li>
+                <li><a href="#feedback-apis">Feedback APIs</a></li>
+                <li><a href="#ranking-apis">Ranking APIs</a></li>
+                <li><a href="#checkin-apis">Check-In/Out APIs</a></li>
+                <li><a href="#error-handling">Error Handling</a></li>
+            </ul>
+        </nav>
+
+        <!-- STUDENT APIS -->
+        <div class="section" id="student-apis">
+            <h2>🎓 Student APIs</h2>
+
+            <div class="endpoint">
+                <h3>1. Student Login</h3>
+                <span class="method post">POST</span>
+                <div class="endpoint-url">/api/student/login</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Authenticates a student and provides a JWT token for accessing protected endpoints. 
+                    Students can log in using either their email address or registration number along with their password. 
+                    Upon successful authentication, returns student profile data and a token valid for 24 hours.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "email": "mansi.jain@sgtu.ac.in",
+  "password": "student123"
+}</pre>
+                    <p style="margin-top: 10px;"><em>OR use registration number:</em></p>
+                    <pre>{
+  "registration_no": "2024SGTU30004",
+  "password": "student123"
+}</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "student": {
+      "id": "193ca5ad-bf84-43d7-a676-863f788e5462",
+      "full_name": "Mansi Jain",
+      "email": "mansi.jain@sgtu.ac.in",
+      "registration_no": "2024SGTU30004",
+      "school_name": "School of Management",
+      "phone": "+91-9876543214"
+    }
+  },
+  "timestamp": "2025-11-17T08:10:47.720Z"
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>2. Student Registration</h3>
+                <span class="method post">POST</span>
+                <div class="endpoint-url">/api/student/register</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Creates a new student account in the system. Requires valid university email, 
+                    unique registration number, and must be associated with an existing school. Password is automatically 
+                    hashed for security. Returns a JWT token immediately after successful registration.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "full_name": "John Doe",
+  "email": "john.doe@sgtu.ac.in",
+  "password": "student123",
+  "registration_no": "2024SGTU10001",
+  "school_id": "uuid-of-school"
+}</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (201 Created):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Registration successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "student": {
+      "id": "uuid",
+      "full_name": "John Doe",
+      "email": "john.doe@sgtu.ac.in",
+      "registration_no": "2024SGTU10001",
+      "school_name": "School of Computing Sciences and Engineering"
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>3. Get Student Profile</h3>
+                <span class="method get">GET</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/profile</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Retrieves the complete profile information of the currently logged-in student. 
+                    Uses the JWT token to identify the student and returns all profile details including school affiliation, 
+                    contact information, and account creation date.
+                </p>
+                
+                <div class="params">
+                    <h4>Headers:</h4>
+                    <pre>Authorization: Bearer &lt;token&gt;</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": {
+    "id": "193ca5ad-bf84-43d7-a676-863f788e5462",
+    "full_name": "Mansi Jain",
+    "email": "mansi.jain@sgtu.ac.in",
+    "registration_no": "2024SGTU30004",
+    "school_name": "School of Management",
+    "phone": "+91-9876543214",
+    "created_at": "2025-01-15T10:30:00.000Z"
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>4. Get Student QR Code</h3>
+                <span class="method get">GET</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/qr-code</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Generates a unique QR code for the student that volunteers can scan for check-in/check-out. 
+                    The QR code contains an encrypted JWT token with student information. QR codes are cached in Redis for 24 hours 
+                    for performance optimization. Returns the QR code as a base64-encoded image.
+                </p>
+                
+                <div class="params">
+                    <h4>Headers:</h4>
+                    <pre>Authorization: Bearer &lt;token&gt;</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": {
+    "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "registration_no": "2024SGTU30004"
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>5. Scan Stall QR Code</h3>
+                <span class="method post">POST</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/scan-stall</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Records a student's visit to a stall when they scan the stall's QR code. 
+                    Validates the QR token, records the visit timestamp, and checks if the student has already submitted 
+                    feedback for this stall. This is the first step before submitting feedback - students must scan a stall 
+                    before they can rate it.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "stall_qr_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Stall scanned successfully",
+  "data": {
+    "stall": {
+      "id": "uuid",
+      "stall_number": "CS-001",
+      "stall_name": "AI & Machine Learning",
+      "school_name": "School of Computing Sciences",
+      "description": "Latest AI projects",
+      "location": "Ground Floor, Block A"
+    },
+    "already_reviewed": false,
+    "existing_feedback": null
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>6. Submit Feedback</h3>
+                <span class="method post">POST</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/submit-feedback</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Allows students to rate and review stalls they've visited. Students can give a 
+                    rating from 1-5 stars and optionally add comments. Each student is limited to 200 feedbacks total. 
+                    Students can update their feedback for a stall if they've already reviewed it. The system tracks the 
+                    number of remaining feedbacks available.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "stall_id": "uuid-of-stall",
+  "rating": 5,
+  "comment": "Amazing stall! Very informative."
+}</pre>
+                    <p><em>Note: rating must be 1-5, comment is optional</em></p>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (201 Created):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Feedback submitted successfully",
+  "data": {
+    "feedback": {
+      "id": "uuid",
+      "stall_name": "AI & Machine Learning",
+      "stall_number": "CS-001",
+      "rating": 5,
+      "comment": "Amazing stall!",
+      "submitted_at": "2025-11-17T10:30:00.000Z"
+    },
+    "total_feedbacks_given": 15,
+    "remaining_feedbacks": 185
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>7. Get My Visits</h3>
+                <span class="method get">GET</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/my-visits</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Retrieves a complete history of all stalls the student has visited, showing 
+                    whether they've submitted feedback for each stall. Includes stall details, visit timestamps, feedback 
+                    status, and counts total visits. Helps students track which stalls they've seen and which ones still 
+                    need feedback.
+                </p>
+                
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": {
+    "total_visits": 15,
+    "remaining_feedbacks": 185,
+    "visits": [
+      {
+        "stall_id": "uuid",
+        "stall_number": "CS-001",
+        "stall_name": "AI & Machine Learning",
+        "school_name": "School of Computing Sciences",
+        "rating": 5,
+        "comment": "Amazing!",
+        "visited_at": "2025-11-17T10:30:00.000Z"
+      }
+    ]
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>8. Get My School Stalls (for ranking)</h3>
+                <span class="method get">GET</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/my-school-stalls</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Returns only the stalls belonging to the student's own school for the ranking 
+                    process. This ensures students can only rank stalls from their school (Category 2 ranking). Shows stall 
+                    details including current rankings and total votes. Used before submitting school rankings.
+                </p>
+                
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": {
+    "student_info": {
+      "id": "uuid",
+      "registration_no": "2024SGTU30004",
+      "full_name": "Mansi Jain",
+      "school_name": "School of Management"
+    },
+    "stalls": [
+      {
+        "stall_id": "uuid",
+        "stall_number": "BM-001",
+        "stall_name": "Startup Incubation Hub",
+        "description": "Student startup pitches",
+        "location": "Ground Floor, Block C"
+      }
+    ],
+    "total_stalls": 8,
+    "instructions": "Select top 3 stalls from YOUR SCHOOL ONLY"
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>9. Submit School Ranking</h3>
+                <span class="method post">POST</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/submit-school-ranking</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Allows students to submit their top 3 stall rankings within their own school 
+                    (Category 2). This is a ONE-TIME operation - once submitted, rankings cannot be changed. Must rank exactly 
+                    3 different stalls with ranks 1, 2, and 3. Validates that all stalls belong to the student's school. 
+                    Uses weighted scoring: Rank 1 = 5 points, Rank 2 = 3 points, Rank 3 = 1 point.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "rankings": [
+    {
+      "stall_id": "uuid-1",
+      "rank": 1
+    },
+    {
+      "stall_id": "uuid-2",
+      "rank": 2
+    },
+    {
+      "stall_id": "uuid-3",
+      "rank": 3
+    }
+  ]
+}</pre>
+                    <p><em>Note: Must provide exactly 3 rankings with ranks 1, 2, 3. ONE-TIME only!</em></p>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (201 Created):</h4>
+                    <pre>{
+  "success": true,
+  "message": "School rankings submitted",
+  "data": {
+    "message": "🎉 Rankings submitted successfully!",
+    "submitted_rankings": [
+      {
+        "rank": 1,
+        "stall_name": "Startup Incubation Hub",
+        "stall_number": "BM-001"
+      }
+    ],
+    "note": "Your rankings cannot be changed."
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>10. Student Logout</h3>
+                <span class="method post">POST</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/student/logout</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Logs out the student by clearing authentication cookies. Should be called when 
+                    the student wants to end their session. Frontend should also clear the stored JWT token from localStorage 
+                    after calling this endpoint.
+                </p>
+                
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Logout successful",
+  "data": null
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- VOLUNTEER APIS -->
+        <div class="section" id="volunteer-apis">
+            <h2>👥 Volunteer APIs</h2>
+
+            <div class="endpoint">
+                <h3>1. Volunteer Login</h3>
+                <span class="method post">POST</span>
+                <div class="endpoint-url">/api/volunteer/login</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Authenticates volunteers who manage student check-ins/check-outs at the event. 
+                    Returns a JWT token that allows access to volunteer-specific endpoints. Volunteers use this to log in 
+                    before they can scan student QR codes for attendance tracking.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "email": "rahul.sharma@sgtu.ac.in",
+  "password": "volunteer123"
+}</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "volunteer": {
+      "id": "uuid",
+      "full_name": "Rahul Sharma",
+      "email": "rahul.sharma@sgtu.ac.in",
+      "volunteer_id": "VOL-001",
+      "phone": "+91-9876543210"
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>2. Check-In Student</h3>
+                <span class="method post">POST</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/volunteer/check-in</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Records when a student enters the event venue. Volunteers scan the student's 
+                    QR code to mark their entry time. Validates the QR token, verifies the student isn't already checked in, 
+                    and creates a check-in record with timestamp. Prevents duplicate check-ins.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "student_qr_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (201 Created):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Check-in successful",
+  "data": {
+    "check_in": {
+      "id": "uuid",
+      "student_name": "Mansi Jain",
+      "registration_no": "2024SGTU30004",
+      "school_name": "School of Management",
+      "check_in_time": "2025-11-17T09:00:00.000Z"
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>3. Check-Out Student</h3>
+                <span class="method post">POST</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/volunteer/check-out</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Records when a student leaves the event venue. Volunteers scan the student's 
+                    QR code to mark their exit time. Updates the existing check-in record with checkout timestamp and 
+                    calculates total duration. Requires the student to be checked in first.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "student_qr_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Check-out successful",
+  "data": {
+    "check_out": {
+      "id": "uuid",
+      "student_name": "Mansi Jain",
+      "check_in_time": "2025-11-17T09:00:00.000Z",
+      "check_out_time": "2025-11-17T17:00:00.000Z",
+      "duration_minutes": 480
+    }
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN APIS -->
+        <div class="section" id="admin-apis">
+            <h2>🔐 Admin APIs</h2>
+
+            <div class="endpoint">
+                <h3>1. Admin Login</h3>
+                <span class="method post">POST</span>
+                <div class="endpoint-url">/api/admin/login</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Authenticates administrators who have full access to system analytics, reports, 
+                    and management features. Returns a JWT token with admin privileges. Admins can view all students, 
+                    volunteers, statistics, and ranking results.
+                </p>
+                
+                <div class="params">
+                    <h4>Request Body:</h4>
+                    <pre>{
+  "email": "admin@sgtu.ac.in",
+  "password": "admin123"
+}</pre>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "admin": {
+      "id": "uuid",
+      "email": "admin@sgtu.ac.in",
+      "full_name": "Admin User",
+      "role": "ADMIN"
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>2. Get All Students</h3>
+                <span class="method get">GET</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/admin/students?limit=100&offset=0</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Retrieves a list of all registered students with their details and activity 
+                    status. Shows check-in status, feedback count, ranking completion status, and school affiliation. 
+                    Supports pagination for large datasets. Used for monitoring student participation and generating reports.
+                </p>
+                
+                <div class="params">
+                    <h4>Query Parameters:</h4>
+                    <div class="param-item">
+                        <span class="param-name">limit</span>
+                        <span class="param-type">(optional, default: 100)</span> - Number of records
+                    </div>
+                    <div class="param-item">
+                        <span class="param-name">offset</span>
+                        <span class="param-type">(optional, default: 0)</span> - Skip records
+                    </div>
+                </div>
+
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "full_name": "Mansi Jain",
+      "email": "mansi.jain@sgtu.ac.in",
+      "registration_no": "2024SGTU30004",
+      "school_name": "School of Management",
+      "phone": "+91-9876543214",
+      "is_inside_event": false,
+      "feedback_count": 15,
+      "has_completed_ranking": true
+    }
+  ]
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>3. Get Top Stalls</h3>
+                <span class="method get">GET</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/admin/top-stalls?limit=10</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Returns the highest-ranked stalls across all schools based on student votes. 
+                    Uses weighted scoring system where Rank 1 votes = 5 points, Rank 2 = 3 points, Rank 3 = 1 point. 
+                    Shows which specific stall received the most recognition and includes which school it belongs to. 
+                    This is for Category 2 results - top stalls within schools.
+                </p>
+                
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": {
+    "top_stalls": [
+      {
+        "position": 1,
+        "stall_id": "uuid",
+        "stall_number": "BM-001",
+        "stall_name": "Startup Incubation Hub",
+        "description": "Student startup pitches",
+        "location": "Ground Floor, Block C",
+        "school": {
+          "school_id": "uuid",
+          "school_name": "School of Management"
+        },
+        "ranking_stats": {
+          "rank_1_votes": 10,
+          "rank_2_votes": 8,
+          "rank_3_votes": 5,
+          "total_votes": 23,
+          "weighted_score": 74
+        }
+      }
+    ],
+    "scoring_system": {
+      "rank_1": "5 points",
+      "rank_2": "3 points",
+      "rank_3": "1 point"
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>4. Get Top Schools</h3>
+                <span class="method get">GET</span>
+                <span class="badge required">AUTH REQUIRED</span>
+                <div class="endpoint-url">/api/admin/top-schools?limit=10</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Returns schools ranked by their total accumulated points from all their stalls. 
+                    Aggregates all votes for stalls belonging to each school using the weighted scoring system. Shows which 
+                    school's stalls collectively performed best. Used for overall school performance analysis and Category 1 
+                    ranking results.
+                </p>
+                
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": {
+    "top_schools": [
+      {
+        "position": 1,
+        "school_name": "School of Management",
+        "total_score": 45,
+        "breakdown": {
+          "rank_1_votes": 5,
+          "rank_2_votes": 4,
+          "rank_3_votes": 3
+        },
+        "students_participated": 10
+      }
+    ]
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- STALL APIS -->
+        <div class="section" id="stall-apis">
+            <h2>🏪 Stall APIs</h2>
+
+            <div class="endpoint">
+                <h3>1. Get All Stalls</h3>
+                <span class="method get">GET</span>
+                <div class="endpoint-url">/api/stall/all</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Retrieves a complete list of all stalls across all schools participating in 
+                    the event. Shows stall details including location, school affiliation, description, and current voting 
+                    statistics. Public endpoint that doesn't require authentication. Used for displaying stall directory.
+                </p>
+                
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "stall_number": "CS-001",
+      "stall_name": "AI & Machine Learning",
+      "school_name": "School of Computing Sciences",
+      "description": "Latest AI projects",
+      "location": "Ground Floor, Block A",
+      "is_active": true
+    }
+  ]
+}</pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>2. Get Stall by ID</h3>
+                <span class="method get">GET</span>
+                <div class="endpoint-url">/api/stall/:id</div>
+                
+                <p style="margin: 15px 0; color: #555;">
+                    <strong>Purpose:</strong> Fetches detailed information about a specific stall using its unique ID. 
+                    Returns complete stall information including school, location, statistics, and ranking data. Used when 
+                    displaying individual stall details or after scanning a stall QR code.
+                </p>
+                
+                <div class="response-example">
+                    <h4>Response (200 OK):</h4>
+                    <pre>{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "stall_number": "CS-001",
+    "stall_name": "AI & Machine Learning",
+    "school_name": "School of Computing Sciences",
+    "description": "Latest AI projects",
+    "location": "Ground Floor, Block A",
+    "total_feedback_count": 50,
+    "rank_1_votes": 10,
+    "weighted_score": 74
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR HANDLING -->
+        <div class="section" id="error-handling">
+            <h2>⚠️ Error Handling</h2>
+
+            <div class="endpoint">
+                <h3>Error Response Format</h3>
+                <pre>{
+  "success": false,
+  "message": "Error message here",
+  "data": null,
+  "timestamp": "2025-11-17T08:10:47.720Z"
+}</pre>
+
+                <h3 style="margin-top: 30px;">HTTP Status Codes</h3>
+                <div class="param-item">
+                    <span class="param-name">200</span> - Success
+                </div>
+                <div class="param-item">
+                    <span class="param-name">201</span> - Created
+                </div>
+                <div class="param-item">
+                    <span class="param-name">400</span> - Bad Request (validation errors)
+                </div>
+                <div class="param-item">
+                    <span class="param-name">401</span> - Unauthorized (invalid credentials)
+                </div>
+                <div class="param-item">
+                    <span class="param-name">403</span> - Forbidden (insufficient permissions)
+                </div>
+                <div class="param-item">
+                    <span class="param-name">404</span> - Not Found
+                </div>
+                <div class="param-item">
+                    <span class="param-name">409</span> - Conflict (duplicate entry)
+                </div>
+                <div class="param-item">
+                    <span class="param-name">500</span> - Internal Server Error
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box" style="margin-top: 40px;">
+            <h3>📝 Integration Example (React/Next.js)</h3>
+            <pre>// api/client.js
+const API_BASE_URL = 'http://localhost:5000/api';
+
+export const studentLogin = async (email, password) => {
+  const response = await fetch(`${API_BASE_URL}/student/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ email, password }),
+  });
+  
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  
+  localStorage.setItem('token', data.data.token);
+  return data.data;
+};
+
+export const getStudentProfile = async () => {
+  const token = localStorage.getItem('token');
+  
+  const response = await fetch(`${API_BASE_URL}/student/profile`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    credentials: 'include',
+  });
+  
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  
+  return data.data;
+};</pre>
+        </div>
+
+        <footer style="text-align: center; padding: 40px 0; color: #888;">
+            <p>Last Updated: November 17, 2025</p>
+            <p>Questions? Contact the backend team</p>
+        </footer>
+    </div>
+
+    <script>
+        // Smooth scroll for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+        
+        // Highlight active section in navigation
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('nav a');
+        
+        window.addEventListener('scroll', function() {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 100)) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.style.background = '';
+                link.style.color = '';
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.style.background = '#667eea';
+                    link.style.color = 'white';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

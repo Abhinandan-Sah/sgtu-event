@@ -1,0 +1,387 @@
+{
+  "baseURL": "http://localhost:5000/api",
+  "authentication": {
+    "type": "JWT",
+    "header": "Authorization: Bearer <token>",
+    "tokenExpiry": "24 hours",
+    "cookieBased": true
+  },
+  "testCredentials": {
+    "student": {
+      "email": "mansi.jain@sgtu.ac.in",
+      "password": "student123",
+      "registration_no": "2024SGTU30004"
+    },
+    "volunteer": {
+      "email": "rahul.sharma@sgtu.ac.in",
+      "password": "volunteer123"
+    },
+    "admin": {
+      "email": "admin@sgtu.ac.in",
+      "password": "admin123"
+    }
+  },
+  "endpoints": {
+    "student": [
+      {
+        "name": "Login",
+        "method": "POST",
+        "path": "/student/login",
+        "auth": false,
+        "body": {
+          "email": "string (required OR registration_no)",
+          "registration_no": "string (required OR email)",
+          "password": "string (required)"
+        },
+        "response": {
+          "token": "string",
+          "student": "object"
+        }
+      },
+      {
+        "name": "Register",
+        "method": "POST",
+        "path": "/student/register",
+        "auth": false,
+        "body": {
+          "full_name": "string (required)",
+          "email": "string (required)",
+          "password": "string (required)",
+          "registration_no": "string (required)",
+          "school_id": "uuid (required)"
+        }
+      },
+      {
+        "name": "Get Profile",
+        "method": "GET",
+        "path": "/student/profile",
+        "auth": true
+      },
+      {
+        "name": "Update Profile",
+        "method": "PUT",
+        "path": "/student/profile",
+        "auth": true,
+        "body": {
+          "email": "string (optional)",
+          "password": "string (optional)"
+        }
+      },
+      {
+        "name": "Get QR Code",
+        "method": "GET",
+        "path": "/student/qr-code",
+        "auth": true
+      },
+      {
+        "name": "Logout",
+        "method": "POST",
+        "path": "/student/logout",
+        "auth": true
+      },
+      {
+        "name": "Get Check-In History",
+        "method": "GET",
+        "path": "/student/check-in-history",
+        "auth": true
+      },
+      {
+        "name": "Scan Stall",
+        "method": "POST",
+        "path": "/student/scan-stall",
+        "auth": true,
+        "body": {
+          "stall_qr_token": "string (required)"
+        }
+      },
+      {
+        "name": "Submit Feedback",
+        "method": "POST",
+        "path": "/student/submit-feedback",
+        "auth": true,
+        "body": {
+          "stall_id": "uuid (required)",
+          "rating": "number 1-5 (required)",
+          "comment": "string (optional)"
+        },
+        "notes": "Max 200 feedbacks per student"
+      },
+      {
+        "name": "Get My Visits",
+        "method": "GET",
+        "path": "/student/my-visits",
+        "auth": true
+      },
+      {
+        "name": "Get My School Stalls",
+        "method": "GET",
+        "path": "/student/my-school-stalls",
+        "auth": true,
+        "notes": "For school ranking - returns stalls from student's school only"
+      },
+      {
+        "name": "Submit School Ranking",
+        "method": "POST",
+        "path": "/student/submit-school-ranking",
+        "auth": true,
+        "body": {
+          "rankings": [
+            {
+              "stall_id": "uuid (required)",
+              "rank": "number 1-3 (required)"
+            }
+          ]
+        },
+        "notes": "ONE-TIME only! Must rank exactly 3 stalls from own school"
+      },
+      {
+        "name": "Get My School Ranking",
+        "method": "GET",
+        "path": "/student/my-school-ranking",
+        "auth": true
+      }
+    ],
+    "volunteer": [
+      {
+        "name": "Login",
+        "method": "POST",
+        "path": "/volunteer/login",
+        "auth": false,
+        "body": {
+          "email": "string (required)",
+          "password": "string (required)"
+        }
+      },
+      {
+        "name": "Get Profile",
+        "method": "GET",
+        "path": "/volunteer/profile",
+        "auth": true
+      },
+      {
+        "name": "Logout",
+        "method": "POST",
+        "path": "/volunteer/logout",
+        "auth": true
+      },
+      {
+        "name": "Check-In Student",
+        "method": "POST",
+        "path": "/volunteer/check-in",
+        "auth": true,
+        "body": {
+          "student_qr_token": "string (required)"
+        }
+      },
+      {
+        "name": "Check-Out Student",
+        "method": "POST",
+        "path": "/volunteer/check-out",
+        "auth": true,
+        "body": {
+          "student_qr_token": "string (required)"
+        }
+      },
+      {
+        "name": "Get My Activity",
+        "method": "GET",
+        "path": "/volunteer/my-activity",
+        "auth": true
+      }
+    ],
+    "admin": [
+      {
+        "name": "Login",
+        "method": "POST",
+        "path": "/admin/login",
+        "auth": false,
+        "body": {
+          "email": "string (required)",
+          "password": "string (required)"
+        }
+      },
+      {
+        "name": "Get Profile",
+        "method": "GET",
+        "path": "/admin/profile",
+        "auth": true
+      },
+      {
+        "name": "Update Profile",
+        "method": "PUT",
+        "path": "/admin/profile",
+        "auth": true
+      },
+      {
+        "name": "Logout",
+        "method": "POST",
+        "path": "/admin/logout",
+        "auth": true
+      },
+      {
+        "name": "Get All Students",
+        "method": "GET",
+        "path": "/admin/students",
+        "auth": true,
+        "queryParams": {
+          "limit": "number (default: 100)",
+          "offset": "number (default: 0)"
+        }
+      },
+      {
+        "name": "Get All Volunteers",
+        "method": "GET",
+        "path": "/admin/volunteers",
+        "auth": true
+      },
+      {
+        "name": "Get All Stalls",
+        "method": "GET",
+        "path": "/admin/stalls",
+        "auth": true
+      },
+      {
+        "name": "Get Stats",
+        "method": "GET",
+        "path": "/admin/stats",
+        "auth": true
+      },
+      {
+        "name": "Get Top Schools",
+        "method": "GET",
+        "path": "/admin/top-schools",
+        "auth": true,
+        "queryParams": {
+          "limit": "number (default: 10)"
+        },
+        "notes": "Schools ranked by total points from student rankings"
+      },
+      {
+        "name": "Get Top Stalls",
+        "method": "GET",
+        "path": "/admin/top-stalls",
+        "auth": true,
+        "queryParams": {
+          "limit": "number (default: 10)"
+        },
+        "notes": "Stalls ranked by weighted score (rank_1×5 + rank_2×3 + rank_3×1)"
+      }
+    ],
+    "stall": [
+      {
+        "name": "Get All Stalls",
+        "method": "GET",
+        "path": "/stall/all",
+        "auth": false
+      },
+      {
+        "name": "Get Stall by ID",
+        "method": "GET",
+        "path": "/stall/:id",
+        "auth": false
+      },
+      {
+        "name": "Get Stall QR Code",
+        "method": "GET",
+        "path": "/stall/:id/qr-code",
+        "auth": false
+      },
+      {
+        "name": "Get Stalls by School",
+        "method": "GET",
+        "path": "/stall/school/:schoolId",
+        "auth": false
+      }
+    ],
+    "feedback": [
+      {
+        "name": "Get All Feedbacks",
+        "method": "GET",
+        "path": "/feedback/all",
+        "auth": true,
+        "queryParams": {
+          "limit": "number (default: 100)",
+          "offset": "number (default: 0)"
+        },
+        "role": "admin"
+      },
+      {
+        "name": "Get Feedbacks by Stall",
+        "method": "GET",
+        "path": "/feedback/stall/:stallId",
+        "auth": false,
+        "notes": "Returns feedbacks with stats (average rating, breakdown)"
+      }
+    ],
+    "ranking": [
+      {
+        "name": "Get All Rankings",
+        "method": "GET",
+        "path": "/ranking/all",
+        "auth": true,
+        "role": "admin"
+      },
+      {
+        "name": "Get Rankings by School",
+        "method": "GET",
+        "path": "/ranking/school/:schoolId",
+        "auth": false
+      }
+    ],
+    "checkInOut": [
+      {
+        "name": "Get All Check-Ins",
+        "method": "GET",
+        "path": "/check-in-out/all",
+        "auth": true,
+        "queryParams": {
+          "limit": "number (default: 100)",
+          "offset": "number (default: 0)"
+        },
+        "role": "admin"
+      },
+      {
+        "name": "Get Currently Inside",
+        "method": "GET",
+        "path": "/check-in-out/currently-inside",
+        "auth": true,
+        "role": "admin/volunteer"
+      }
+    ]
+  },
+  "responseFormat": {
+    "success": {
+      "success": true,
+      "message": "string",
+      "data": "object|array|null",
+      "timestamp": "ISO8601 string"
+    },
+    "error": {
+      "success": false,
+      "message": "string (error description)",
+      "data": null,
+      "timestamp": "ISO8601 string"
+    }
+  },
+  "statusCodes": {
+    "200": "Success",
+    "201": "Created",
+    "400": "Bad Request (validation errors)",
+    "401": "Unauthorized (invalid credentials/token)",
+    "403": "Forbidden (insufficient permissions)",
+    "404": "Not Found",
+    "409": "Conflict (duplicate entry)",
+    "500": "Internal Server Error"
+  },
+  "corsConfig": {
+    "allowedOrigins": [
+      "http://localhost:3000",
+      "http://localhost:5173"
+    ],
+    "credentials": true
+  },
+  "rateLimiting": {
+    "window": "60 seconds",
+    "maxRequests": 100
+  }
+}
