@@ -283,6 +283,91 @@ const getTopSchools = async (req, res, next) => {
   }
 };
 
+/**
+ * Get top-ranked stalls (Category 2 - ADMIN ONLY)
+ * @route GET /api/admin/top-stalls
+ */
+const getTopStalls = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+
+    const queryText = `
+      SELECT 
+        st.id as stall_id,
+        st.stall_number,
+        st.stall_name,
+        st.description,
+        st.location,
+        sc.id as school_id,
+        sc.school_name,
+        st.rank_1_votes,
+        st.rank_2_votes,
+        st.rank_3_votes,
+        st.weighted_score,
+        (st.rank_1_votes + st.rank_2_votes + st.rank_3_votes) as total_votes
+      FROM stalls st
+      LEFT JOIN schools sc ON st.school_id = sc.id
+      WHERE (st.rank_1_votes + st.rank_2_votes + st.rank_3_votes) > 0
+      ORDER BY st.weighted_score DESC, st.rank_1_votes DESC, st.stall_number ASC
+      LIMIT $1
+    `;
+
+    const topStalls = await query(queryText, [limit]);
+
+    // Get overall ranking stats
+    const statsQuery = `
+      SELECT 
+        COUNT(DISTINCT stall_id) as total_stalls_ranked,
+        SUM(CASE WHEN rank = 1 THEN 1 ELSE 0 END) as total_rank_1_votes,
+        SUM(CASE WHEN rank = 2 THEN 1 ELSE 0 END) as total_rank_2_votes,
+        SUM(CASE WHEN rank = 3 THEN 1 ELSE 0 END) as total_rank_3_votes,
+        COUNT(DISTINCT student_id) as total_students_voted
+      FROM rankings
+    `;
+
+    const stats = await query(statsQuery);
+
+    return successResponse(res, {
+      top_stalls: topStalls.map((stall, index) => ({
+        position: index + 1,
+        stall_id: stall.stall_id,
+        stall_number: stall.stall_number,
+        stall_name: stall.stall_name,
+        description: stall.description,
+        location: stall.location,
+        school: {
+          school_id: stall.school_id,
+          school_name: stall.school_name
+        },
+        ranking_stats: {
+          rank_1_votes: parseInt(stall.rank_1_votes),
+          rank_2_votes: parseInt(stall.rank_2_votes),
+          rank_3_votes: parseInt(stall.rank_3_votes),
+          total_votes: parseInt(stall.total_votes),
+          weighted_score: parseInt(stall.weighted_score)
+        }
+      })),
+      scoring_system: {
+        rank_1: '5 points',
+        rank_2: '3 points',
+        rank_3: '1 point',
+        formula: 'weighted_score = (rank_1_votes × 5) + (rank_2_votes × 3) + (rank_3_votes × 1)'
+      },
+      overall_stats: {
+        total_stalls_ranked: parseInt(stats[0].total_stalls_ranked),
+        total_students_voted: parseInt(stats[0].total_students_voted),
+        breakdown: {
+          rank_1_votes: parseInt(stats[0].total_rank_1_votes),
+          rank_2_votes: parseInt(stats[0].total_rank_2_votes),
+          rank_3_votes: parseInt(stats[0].total_rank_3_votes)
+        }
+      }
+    }, 'Top stalls retrieved successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   login,
   logout,
@@ -292,5 +377,6 @@ export default {
   getAllVolunteers,
   getAllStalls,
   getStats,
-  getTopSchools
+  getTopSchools,
+  getTopStalls
 };

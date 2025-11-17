@@ -15,7 +15,7 @@ router.get('/stalls/top/:limit', rankingController.getTopRankings);
 router.get('/students/top/:limit', rankingController.getTopStudents);
 
 // Protected routes (admin only)
-router.post('/', authenticateToken, rankingController.createRanking);
+router.post('/y', authenticateToken, rankingController.createRanking);
 router.post('/calculate', authenticateToken, rankingController.calculateRankings);
 router.put('/:id', authenticateToken, rankingController.updateRanking);
 router.delete('/:id', authenticateToken, rankingController.deleteRanking);

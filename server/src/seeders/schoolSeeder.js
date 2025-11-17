@@ -17,6 +17,10 @@ const schools = [
   {
     school_name: 'School of Applied Sciences',
     description: 'Physics, Chemistry, Mathematics, Biotechnology programs. Located in Block D'
+  },
+  {
+    school_name: 'School of Pharmacy',
+    description: 'Pharmaceutical Sciences, Pharmacology, Drug Development programs. Located in Block E'
   }
 ];
 

@@ -22,5 +22,6 @@ router.get('/stats', authenticateToken, adminController.getStats);
 
 // School ranking results (Category 2 - ADMIN ONLY)
 router.get('/top-schools', authenticateToken, adminController.getTopSchools);
+router.get('/top-stalls', authenticateToken, adminController.getTopStalls);
 
 export default router;
