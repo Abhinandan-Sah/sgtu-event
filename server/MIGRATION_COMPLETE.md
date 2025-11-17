@@ -135,7 +135,7 @@ node src/migrations/run-rollback.js
 
 ### Via psql CLI
 ```bash
-psql "postgresql://neondb_owner:npg_IuogG9DNLM0X@ep-shy-band-a15qdjt0-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+psql "postgresql://neondb_owner:xxxxxxxxxxx@ep-shy-band-a15qdjt0-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 ```
 
 ### Common Queries

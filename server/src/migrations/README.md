@@ -15,7 +15,7 @@
 code .env
 
 # Ensure you have:
-NEON_DATABASE_URL=postgresql://neondb_owner:npg_IuogG9DNLM0X@ep-shy-band-a15qdjt0-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+NEON_DATABASE_URL=postgresql://neondb_owner:xxxxxxxxx@ep-shy-band-a15qdjt0-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 ```
 
 ### Step 2: Run Migration
