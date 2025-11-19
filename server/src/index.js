@@ -80,19 +80,33 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  // Don't log full error stack in production
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Error:', err.message);
+  } else {
+    console.error('Error:', err);
+  }
+  
   res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error'
+    success: false,
+    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
-  console.log(`💚 Health check at http://localhost:${PORT}/health`);
-  console.log(`🎓 SGT University Event Management System`);
-  console.log(`👥 Ready for 11,000+ students | 200+ stalls`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`✅ Server ready on port ${PORT}`);
+  } else {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📡 API available at http://localhost:${PORT}/api`);
+    console.log(`💚 Health check at http://localhost:${PORT}/health`);
+    console.log(`🎓 SGT University Event Management System`);
+    console.log(`👥 Ready for 11,000+ students | 200+ stalls`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 CORS allowed from: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
+  }
 });
 
 // Graceful shutdown

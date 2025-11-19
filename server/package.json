@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
+    "build": "echo 'No build step required for Node.js'",
     "dev": "nodemon src/index.js",
     "migrate": "node src/migrations/run-migration.js",
     "migrate:rollback": "node src/migrations/rollback-database.js",

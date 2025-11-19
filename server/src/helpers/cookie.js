@@ -14,10 +14,12 @@ const COOKIE_CONFIG = {
   
   // Security options
   get options() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
     return {
       httpOnly: true,  // Prevents JavaScript access (XSS protection)
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'strict', // CSRF protection (strict/lax/none)
+      secure: isProduction, // HTTPS only in production
+      sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-origin in production, 'lax' for development
       maxAge: this.MAX_AGE,
       path: this.PATH
     };
