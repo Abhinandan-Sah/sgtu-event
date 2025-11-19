@@ -20,6 +20,9 @@ node_modules/
 /out/
 .next/
 
+# test pages (client)
+client/src/pages/test/
+
 # production
 /build
 build/

@@ -14,21 +14,29 @@ class RedisClient {
 
   /**
    * Initialize Redis connection with retry logic
-   * Production: Auto-reconnect on failure
+   * Production: Auto-reconnect on failure, non-blocking
    */
   async connect() {
+    // Skip Redis if not configured
+    if (!process.env.REDIS_HOST && !process.env.REDIS_URL) {
+      console.log('⚠️  Redis: Not configured (caching disabled)');
+      return null;
+    }
+
     try {
       // Create Redis client with production config
       this.client = createClient({
         socket: {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT) || 6379,
+          connectTimeout: 5000, // 5 second timeout
           reconnectStrategy: (retries) => {
-            if (retries > this.maxReconnectAttempts) {
+            if (retries > 3) { // Reduced from 10 to 3
               console.error('❌ Redis: Max reconnection attempts reached');
-              return new Error('Redis connection failed');
+              this.isConnected = false;
+              return false; // Stop reconnecting
             }
-            const delay = Math.min(retries * 100, 3000); // Max 3s delay
+            const delay = Math.min(retries * 100, 1000); // Max 1s delay
             console.log(`🔄 Redis: Reconnecting in ${delay}ms (attempt ${retries})`);
             return delay;
           }
@@ -38,10 +46,11 @@ class RedisClient {
         database: parseInt(process.env.REDIS_DB) || 0
       });
 
-      // Event handlers
+      // Event handlers (non-blocking)
       this.client.on('error', (err) => {
-        console.error('❌ Redis Client Error:', err);
+        console.error('❌ Redis Client Error:', err.message);
         this.isConnected = false;
+        // Don't crash the server
       });
 
       this.client.on('connect', () => {
@@ -73,7 +82,9 @@ class RedisClient {
       return this.client;
     } catch (error) {
       console.error('❌ Redis connection failed:', error.message);
-      throw error;
+      console.log('⚠️  Server will continue without caching');
+      this.isConnected = false;
+      return null; // Non-blocking failure
     }
   }
 
